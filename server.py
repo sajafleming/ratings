@@ -47,15 +47,38 @@ def submit_form():
     user_password = request.form.get('password')
 
     if User.query.filter_by(email=user_email).first():
-        print "change me later"
+        flash("You are already a member, please log in.") 
     else:
         user = User(email=user_email, password=user_password)
 
+        # add user to database
         db.session.add(user)
 
+        # commit user to database
         db.session.commit()
-        
+
+        flash("Thank you for registering, please log in.") 
+
+    return render_template("login.html")
+
+@app.route('/login', methods=["POST"])
+def user_login():
+    """Check if email and password are correct and log in"""
+
+    user_email = request.form.get('email')
+    user_password = request.form.get('password')
+
+    if User.query.filter_by(email=user_email, password=user_password).first():
+        flash("Congrats, you actually remembered your password")
+        logged_in_user = User.query.filter_by(email=user_email, password=user_password).first()
+        session["user_id"] = logged_in_user.user_id
+
+        return redirect('/')
+    else:
+        flash("you idiot, try again and this time GET IT RIGHT.")
         return render_template("login.html")
+
+
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the point
