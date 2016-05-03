@@ -2,6 +2,8 @@
 
 from flask_sqlalchemy import SQLAlchemy
 
+from datetime import datetime
+
 # This is the connection to the PostgreSQL database; we're getting this through
 # the Flask-SQLAlchemy helper library. On this, we can find the `session`
 # object, where we do most of our interactions (like committing, etc.)
@@ -22,12 +24,13 @@ class User(db.Model):
     password = db.Column(db.String(64), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     zipcode = db.Column(db.String(15), nullable=True)
-    ratings = db.relationship('Rating', backref='user')
+    
 
     def __repr__(self):
         """Provide helpful representation when printed."""   
         
-        return "<User user_id=%s email=%s>" % (self.user_id, self.email) 
+        return ("<User user_id=%s email=%s age=%s zipcode=%s>" 
+                % (self.user_id, self.email, self.age, self.zipcode)) 
 
 
 # Put your Movie and Rating model classes here.
@@ -40,7 +43,13 @@ class Movie(db.Model):
     title = db.Column(db.String(200), nullable=False)
     released_at = db.Column(db.DateTime, nullable=True)
     imdb_url = db.Column(db.String(400), nullable=True)
-    ratings = db.relationship('Rating', backref='movie')
+
+    def __repr__(self):
+        """Provide helpful representation when printed."""
+
+        return ("<Movie movie_id=%s title=%s released_at=%s imdb_url=%s>"
+                % (self.movie_id, self.title, self.released_at, self.imdb_url))
+               #add in datetime for released_at later
 
 class Rating(db.Model):
     """Ratings of movies by users"""
@@ -51,6 +60,23 @@ class Rating(db.Model):
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
+
+    # Define relationship to user
+    user = db.relationship('User', 
+                           backref=db.backref('ratings', order_by=rating_id))
+
+    # Define relationship to movie
+    movie = db.relationship('Movie',
+                            backref=db.backref('ratings', order_by=rating_id))
+
+
+    def __repr__(self):
+        """Provide helpful representation when printed."""
+
+        return ("<Rating rating_id=%s movie_id=%s user_id=%s score=%s>" 
+                % (self.rating_id, self.movie_id, self.user_id, self.score))
+
+
 
 ##############################################################################
 # Helper functions
