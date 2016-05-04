@@ -100,10 +100,65 @@ def user_details(user_id):
     for rating in user_ratings:
         movie_title_rating_list.append((rating.movie.title, rating.score))
 
-    return render_template("user_details.html", age=user_age,
+    return render_template("user_details.html", 
+                           age=user_age,
                            zipcode=user_zipcode,
                            movie_ratings=movie_title_rating_list)
 
+@app.route('/movies')
+def movies_list():
+    """Show all the movies in alphabetical order"""
+
+    movies = Movie.query.order_by('title').all()
+
+    return render_template("movie_list.html", movies=movies)
+
+@app.route('/movies/<int:movie_id>')
+def movie_details(movie_id):
+    """Show movie details with ratings"""
+
+    movie = Movie.query.get(movie_id)
+
+    movie_title = movie.title
+    movie_url = movie.imdb_url
+    movie_ratings = movie.ratings
+    movie_id = movie.movie_id
+
+    ratings_list = []
+    for rating in movie_ratings:
+        ratings_list.append((rating.user_id, rating.score))
+
+    if session['user_id']:
+        for rating in ratings_list:
+            if session['user_id'] == rating[0]:
+                user_rating = rating
+            else:
+                user_rating = (session['user_id'], 0)
+
+    return render_template("movie_details.html",
+                           title=movie_title,
+                           url=movie_url,
+                           movie_id=movie_id,
+                           user_rating=user_rating,
+                           movie_ratings=ratings_list)
+
+@app.route("/new-rating")
+def update_rating():
+    """Will update user rating in database given user is logged in"""
+
+    new_rating = request.form.get(new_rating)
+    # get movie idea from hidden form
+    movie_id = request.form.get(movie_id)
+
+    if Rating.query.filter_by(movie_id=movie_id, user_id=session['user_id']).first():
+        #find the rating for that movie by that user
+        rating = Rating(score=new_rating)
+    else:
+        rating = Rating(movie_id=movie_id, user_id=session['user_id'], score=new_rating) 
+
+    db.session.add(rating)
+
+    db.session.commit()
 
 
 if __name__ == "__main__":
