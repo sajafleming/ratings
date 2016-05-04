@@ -7,12 +7,16 @@
 <body>
   Ratings
 
+{% if session.get("user_id") %}
+  <a href="/logout">Logout</a>
+{% endif %}
+
   <ul>
     {% for message in get_flashed_messages() %}
         <li>{{ message }}</li>
     {% endfor %}
   </ul>
-  
+
   <hr>
 
   {% block content %} put your content here {% endblock %}

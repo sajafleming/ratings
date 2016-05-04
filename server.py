@@ -78,6 +78,32 @@ def user_login():
         flash("you idiot, try again and this time GET IT RIGHT.")
         return render_template("login.html")
 
+@app.route('/logout')
+def user_logout():
+    """Logs out"""
+
+    del session["user_id"]
+
+    return redirect('/')
+
+@app.route('/users/<int:user_id>')
+def user_details(user_id):
+    """Show user details"""
+
+    user = User.query.get(user_id)    
+
+    user_age = user.age
+    user_zipcode = user.zipcode 
+    user_ratings = user.ratings
+
+    movie_title_rating_list = []
+    for rating in user_ratings:
+        movie_title_rating_list.append((rating.movie.title, rating.score))
+
+    return render_template("user_details.html", age=user_age,
+                           zipcode=user_zipcode,
+                           movie_ratings=movie_title_rating_list)
+
 
 
 if __name__ == "__main__":
