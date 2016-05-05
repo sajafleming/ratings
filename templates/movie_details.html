@@ -18,12 +18,20 @@
     <p>We predict you will rate this movie {{ prediction }}.</p>
 {% endif %}
 
-<ul>
-  <li>User ID: Score</li>
-{% for rating in movie_ratings %}
-  <li><a href="/users/{{ rating[0] }}">{{ rating[0] }}</a>: {{ rating[1] }}</li>
-{% endfor %}
-</ul>
+
+<table>
+    <tr>
+        <th>User ID</th>
+        <th>Score</th>
+    </tr>
+    {% for rating in movie_ratings %}
+    <tr>
+        <td><a href="/users/{{ rating[0] }}">{{ rating[0] }}</a></td>
+        <td>{{ rating[1] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
     
 
 {% endblock %}

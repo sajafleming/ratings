@@ -2,3 +2,12 @@ body {
     background-image:url("http://www.thinkgeek.com/images/products/additional/large/1380_team_fortress_balloonicorn_vinyl_figure_inhand.jpg");
     background-size: 100% auto;
 }
+
+a {
+    color: black;
+    font-weight: bold
+}
+
+input {
+    background-color: green;
+}

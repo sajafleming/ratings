@@ -139,22 +139,36 @@ def movie_details(movie_id):
     movie_ratings = movie.ratings
     movie_id = movie.movie_id
 
+    user_id = session.get('user_id')
     # Iterate through movie_ratings and get user_id and score for each rating and append to list
     ratings_list = []
     for rating in movie_ratings:
         ratings_list.append((rating.user_id, rating.score))
 
+
     # If logged in, get user's rating if exists and prompt for updated/new rating
-    if session.get('user_id'):
-        for rating in ratings_list:
-            if session['user_id'] == rating[0]:
-                user_rating = rating
-            else:
-                user_rating = (session['user_id'], None)
+    if user_id:
+        user_score = (db.session.query(Rating.score)
+            .filter(Rating.user_id == user_id, Rating.movie_id==movie_id)
+            .first())
+
+        # If rating exists, db.session.query returns as tuple so 
+        # taking item out of tuple
+        if user_score:
+            user_score = user_score[0]
+
+        user_rating = (user_id, user_score)
+
+        # old slow way that looks through every rating
+        # for rating in ratings_list:
+        #     if user_id == rating[0]:
+        #         user_rating = rating
+        #     else:
+                # user_rating = (user_id, None)
     else:
         user_rating = None
 
-    user_id = session.get('user_id')
+    
     # Find average rating for movie
 
     # list of all scores for this movie id
@@ -166,7 +180,7 @@ def movie_details(movie_id):
     # Predict code: only predict if the user hasn't rated it yet
 
     # If user has not yet rated and there is a valid user_id
-    if (not user_rating) and user_id:
+    if (user_rating[1] == None) and user_id:
         user = User.query.get(user_id)
         if user:
             prediction = user.predict_rating(movie)
