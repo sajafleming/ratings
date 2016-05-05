@@ -5,10 +5,19 @@
 </head>
 
 <body>
-  Ratings
+  <a href="/">Homepage</a>
 
 {% if session.get("user_id") %}
   <a href="/logout">Logout</a>
+  <a href="/users/{{ session['user_id'] }}">Your Ratings</a>
+{% else %}
+  <p>Login</p>
+
+  <form action="/login" method="POST">
+    Email<input type="text" name="email">
+    Password<input type="text" name="password">
+    <input type="submit" value="Login">
+  </form>
 {% endif %}
 
   <ul>

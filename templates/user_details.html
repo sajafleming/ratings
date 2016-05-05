@@ -6,7 +6,7 @@
 
 <ul>
 {% for rating in movie_ratings %}
-  <li>{{ rating[0] }}: {{rating[1] }}</li>
+  <li><a href="/movies/{{ rating[2] }}">{{ rating[0] }}</a>: {{rating[1] }}</li>
 {% endfor %}
 </ul>
     

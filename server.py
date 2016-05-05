@@ -30,6 +30,7 @@ def index():
 def user_list():
     """Show list of users"""
 
+    # Gets all users from user table in database
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
@@ -39,15 +40,18 @@ def add_user():
 
     return render_template("add_user_form.html")
 
-@app.route('/form_submit', methods=["POST"])
-def submit_form():
+@app.route('/new_user', methods=["POST"])
+def new_user_validation():
     """Check if user in db, if not, add!"""
 
+    # Get email and password from the add_user form
     user_email = request.form.get('email')
     user_password = request.form.get('password')
 
+    # Checks if user is already a member, by email and redirects them to login
     if User.query.filter_by(email=user_email).first():
         flash("You are already a member, please log in.") 
+    # If new user, adds new user to users table and redirects to login
     else:
         user = User(email=user_email, password=user_password)
 
@@ -65,15 +69,17 @@ def submit_form():
 def user_login():
     """Check if email and password are correct and log in"""
 
+    # Get email and password from the user login page
     user_email = request.form.get('email')
     user_password = request.form.get('password')
 
+    # Check User db for email and password match, if a match add to session and rediredt to homepage
     if User.query.filter_by(email=user_email, password=user_password).first():
         flash("Congrats, you actually remembered your password")
         logged_in_user = User.query.filter_by(email=user_email, password=user_password).first()
         session["user_id"] = logged_in_user.user_id
-
         return redirect('/')
+    # If email and password do not match, prompt user to validate again
     else:
         flash("you idiot, try again and this time GET IT RIGHT.")
         return render_template("login.html")
@@ -82,7 +88,10 @@ def user_login():
 def user_logout():
     """Logs out"""
 
+    # Deletes user_id from session when logging out
     del session["user_id"]
+
+    flash("You have chosen to leave us. :( ")
 
     return redirect('/')
 
@@ -90,15 +99,18 @@ def user_logout():
 def user_details(user_id):
     """Show user details"""
 
+    # Get user from url
     user = User.query.get(user_id)    
 
+    # Get user's age, zipcode and ratings from db
     user_age = user.age
     user_zipcode = user.zipcode 
     user_ratings = user.ratings
 
+    # Iterate through user ratings and get title, rating score, and movie id for each movie rated
     movie_title_rating_list = []
     for rating in user_ratings:
-        movie_title_rating_list.append((rating.movie.title, rating.score))
+        movie_title_rating_list.append((rating.movie.title, rating.score, rating.movie.movie_id))
 
     return render_template("user_details.html", 
                            age=user_age,
@@ -109,6 +121,7 @@ def user_details(user_id):
 def movies_list():
     """Show all the movies in alphabetical order"""
 
+    # Get all movies and order by title
     movies = Movie.query.order_by('title').all()
 
     return render_template("movie_list.html", movies=movies)
@@ -117,23 +130,29 @@ def movies_list():
 def movie_details(movie_id):
     """Show movie details with ratings"""
 
+    # Get movie by movie_id
     movie = Movie.query.get(movie_id)
 
+    # Get title imdb url, ratings, movie id from db
     movie_title = movie.title
     movie_url = movie.imdb_url
     movie_ratings = movie.ratings
     movie_id = movie.movie_id
 
+    # Iterate through movie_ratings and get user_id and score for each rating and append to list
     ratings_list = []
     for rating in movie_ratings:
         ratings_list.append((rating.user_id, rating.score))
 
-    if session['user_id']:
+    # If logged in, get user's rating if exists and prompt for updated/new rating
+    if session.get('user_id'):
         for rating in ratings_list:
             if session['user_id'] == rating[0]:
                 user_rating = rating
             else:
-                user_rating = (session['user_id'], 0)
+                user_rating = (session['user_id'], "No Rating")
+    else:
+        user_rating = None
 
     return render_template("movie_details.html",
                            title=movie_title,
@@ -142,23 +161,27 @@ def movie_details(movie_id):
                            user_rating=user_rating,
                            movie_ratings=ratings_list)
 
-@app.route("/new-rating")
+@app.route("/new-rating", methods=["POST"])
 def update_rating():
     """Will update user rating in database given user is logged in"""
 
-    new_rating = request.form.get(new_rating)
-    # get movie idea from hidden form
-    movie_id = request.form.get(movie_id)
+    # Get rating from rating form
+    new_rating = request.form.get('new_rating')
+    # Get movie idea from hidden form
+    movie_id = request.form.get('movie_id')
 
-    if Rating.query.filter_by(movie_id=movie_id, user_id=session['user_id']).first():
-        #find the rating for that movie by that user
-        rating = Rating(score=new_rating)
-    else:
-        rating = Rating(movie_id=movie_id, user_id=session['user_id'], score=new_rating) 
-
-    db.session.add(rating)
+    # If user logged in update rating attribute of particular user
+    if session['user_id']: 
+        if Rating.query.filter_by(movie_id=movie_id, user_id=session['user_id']).first():
+            rating = Rating.query.filter_by(movie_id=movie_id, user_id=session['user_id']).first()
+            rating.score = new_rating
+        else:
+            rating = Rating(movie_id=movie_id, user_id=session['user_id'], score=new_rating) 
+            db.session.add(rating)
 
     db.session.commit()
+
+    return redirect('/movies/%s' %(movie_id))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@
 {% if session.get("user_id") %}
   <p>Your rating: {{ user_rating[1] }}</p>
   <form action="/new-rating" method="POST">
-    <p>Would you lke to update your rating?</p>
+    <p>Would you like to update your rating?</p>
     New rating: <input type="text" name="new_rating">
     <input type="hidden" name="movie_id" value="{{ movie_id }}">
     <input type="submit" value="Update!!!">
@@ -16,7 +16,7 @@
 <ul>
   <li>User ID: Score</li>
 {% for rating in movie_ratings %}
-  <li>{{ rating[0] }}: {{rating[1] }}</li>
+  <li><a href="/users/{{ rating[0] }}">{{ rating[0] }}</a>: {{rating[1] }}</li>
 {% endfor %}
 </ul>
     
