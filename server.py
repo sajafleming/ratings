@@ -150,16 +150,36 @@ def movie_details(movie_id):
             if session['user_id'] == rating[0]:
                 user_rating = rating
             else:
-                user_rating = (session['user_id'], "No Rating")
+                user_rating = (session['user_id'], None)
     else:
         user_rating = None
+
+    user_id = session.get('user_id')
+    # Find average rating for movie
+
+    # list of all scores for this movie id
+    rating_scores = [r.score for r in movie.ratings]
+    avg_rating = float(sum(rating_scores)) / len(rating_scores)
+
+    prediction = None
+
+    # Predict code: only predict if the user hasn't rated it yet
+
+    # If user has not yet rated and there is a valid user_id
+    if (not user_rating) and user_id:
+        user = User.query.get(user_id)
+        if user:
+            prediction = user.predict_rating(movie)
 
     return render_template("movie_details.html",
                            title=movie_title,
                            url=movie_url,
                            movie_id=movie_id,
                            user_rating=user_rating,
-                           movie_ratings=ratings_list)
+                           movie_ratings=ratings_list,
+                           average=avg_rating,
+                           prediction=prediction)
+
 
 @app.route("/new-rating", methods=["POST"])
 def update_rating():
